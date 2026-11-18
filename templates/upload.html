@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-10">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <p class="eyebrow">Evidence intake</p>
+        <h1 class="page-title">Upload &amp; Analyze</h1>
+      </div>
+    </div>
+
+    {% if result and result.status %}
+      <div class="alert {% if result.status == 'error' %}alert-danger{% elif result.status == 'duplicate' %}alert-warning{% elif result.status == 'warning' %}alert-info{% else %}alert-success{% endif %} mt-3">
+        <strong>{{ result.status|upper }}</strong> — {{ result.message if result.message else 'Upload processed.' }}
+      </div>
+    {% endif %}
+
+    <div class="card board-panel">
+      <div class="card-body p-4">
+        <form class="dropzone" method="post" enctype="multipart/form-data" action="{{ url_for('upload') }}">
+          <div class="upload-area" id="dropzone">
+            <div class="upload-icon">⬆</div>
+            <p class="fw-semibold mb-1">Drag &amp; drop a suspicious file here</p>
+            <p class="text-muted small mb-3">Supported: JPG, JPEG, PNG, BMP, GIF, TIFF, WAV, AU, AIFF, PDF, ZIP, BIN, EXE</p>
+            <label class="btn btn-primary btn-lg" for="fileInput">Select file</label>
+            <input id="fileInput" type="file" name="file" class="d-none" accept=".jpg,.jpeg,.png,.bmp,.gif,.tif,.tiff,.wav,.au,.aiff,.pdf,.zip,.bin,.exe">
+            <div id="selectedFileName" class="mt-3 small text-muted">No file selected</div>
+          </div>
+          <div class="mt-4 text-end">
+            <button id="analyzeBtn" type="submit" class="btn btn-primary px-4" disabled>Analyze File</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card board-panel mt-4">
+      <div class="card-header">
+        <h5>Validation Rules</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush transparent-list">
+          <li class="list-group-item">File size must not exceed 25 MB.</li>
+          <li class="list-group-item">Extension, MIME type, and file signature are verified together.</li>
+          <li class="list-group-item">Duplicates are flagged when the SHA-256 hash matches a prior submission.</li>
+          <li class="list-group-item">Corrupted images are rejected before metadata extraction.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

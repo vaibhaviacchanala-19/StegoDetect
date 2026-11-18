@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+  <div>
+    <p class="eyebrow mb-1">Hidden data detection overview</p>
+    <h1 class="page-title">Steganography Analysis</h1>
+  </div>
+  <div class="dashboard-actions">
+    <span class="system-status"><span class="status-dot"></span>Analysis tools ready</span>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary">New investigation</a>
+  </div>
+</div>
+
+<section class="kpi-grid mb-4" aria-label="Investigation summary">
+  <div class="card soc-kpi kpi-neutral">
+    <div class="kpi-topline"><span>Total analyses</span><span class="kpi-code">ALL</span></div>
+    <div class="metric-value">{{ stats.total_files }}</div>
+    <div class="kpi-context">Recorded investigations</div>
+  </div>
+  <div class="card soc-kpi kpi-danger">
+    <div class="kpi-topline"><span>Stego indicators</span><span class="kpi-code">SIG</span></div>
+    <div class="metric-value">{{ stats.suspicious_files }}</div>
+    <div class="kpi-context">Require analyst review</div>
+  </div>
+  <div class="card soc-kpi kpi-warning">
+    <div class="kpi-topline"><span>Embedded data</span><span class="kpi-code">CONF</span></div>
+    <div class="metric-value">{{ stats.confirmed_embedded_files }}</div>
+    <div class="kpi-context">Confirmed detections</div>
+  </div>
+  <div class="card soc-kpi kpi-high">
+    <div class="kpi-topline"><span>High risk</span><span class="kpi-code">CRIT</span></div>
+    <div class="metric-value">{{ stats.high_risk_investigations }}</div>
+    <div class="kpi-context">Immediate attention</div>
+  </div>
+</section>
+
+<div class="dashboard-primary-grid mb-4">
+  <div class="card board-panel">
+    <div class="card-header panel-heading">
+      <div><span class="panel-kicker">Detection activity</span><h5>Analysis trends</h5></div>
+      <span class="panel-period">Recent activity</span>
+    </div>
+    <div class="card-body chart-body"><canvas id="trendChart"></canvas></div>
+  </div>
+  <div class="card board-panel">
+    <div class="card-header panel-heading">
+      <div><span class="panel-kicker">Case severity</span><h5>Risk distribution</h5></div>
+    </div>
+    <div class="card-body chart-body risk-chart-body"><canvas id="riskDistributionChart"></canvas></div>
+  </div>
+</div>
+
+
+<div class="dashboard-secondary-grid">
+  <div class="card board-panel recent-cases-panel">
+    <div class="card-header panel-heading">
+      <div><span class="panel-kicker">Case queue</span><h5>Recent investigations</h5></div>
+      <a href="{{ url_for('history') }}" class="panel-link">View all</a>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0 recent-cases-table">
+          <thead>
+            <tr><th>File</th><th>Format</th><th>Risk</th><th>Timestamp</th></tr>
+          </thead>
+          <tbody>
+            {% if recent %}
+              {% for item in recent %}
+              <tr>
+                <td><a href="{{ url_for('analysis', investigation_id=item.id) }}" class="case-link">{{ item.filename }}</a></td>
+                <td><span class="format-label">{{ item.file_format or 'unknown' }}</span></td>
+                <td>
+                  <span class="risk-label {% if item.risk_status == 'high' or item.risk_level == 'high' or item.risk_level == 'critical' %}risk-high{% elif item.risk_status == 'medium' or item.risk_level == 'medium' %}risk-medium{% elif item.risk_status == 'low' or item.risk_level == 'low' %}risk-low{% else %}risk-info{% endif %}">
+                    {{ item.risk_level if item.risk_level else item.risk_status }}
+                  </span>
+                </td>
+                <td class="timestamp-cell">{{ item.analysis_timestamp }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td colspan="4" class="text-center py-5 text-muted">No investigations have been recorded yet.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card board-panel operational-panel">
+    <div class="card-header panel-heading">
+      <div><span class="panel-kicker">Forensic workflow</span><h5>Tool suite status</h5></div>
+    </div>
+    <div class="card-body">
+      <div class="signal-row"><span class="signal-dot signal-cyan"></span><div><strong>Recent detections</strong><small>{{ stats.recent_alerts }} in the current window</small></div></div>
+      <div class="signal-row"><span class="signal-dot signal-blue"></span><div><strong>Recent analyses</strong><small>{{ stats.recent_investigations }} recorded recently</small></div></div>
+      <div class="signal-row"><span class="signal-dot signal-amber"></span><div><strong>Payload review</strong><small>Validate signatures and embedded data</small></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const riskDistribution = {{ stats.risk_distribution | tojson | safe }};
+  const investigationTrends = {{ stats.investigation_trends | tojson | safe }};
+
+  new Chart(document.getElementById('riskDistributionChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(riskDistribution),
+      datasets: [{
+        data: Object.values(riskDistribution),
+        backgroundColor: ['#2dd4bf', '#60a5fa', '#ffce4a', '#ff5e7d', '#94a3b8'],
+        borderWidth: 0,
+        cutout: '68%'
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { color: '#dce9f7', boxWidth: 10, boxHeight: 10, padding: 14 } } }
+    }
+  });
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: investigationTrends.map(item => item.label),
+      datasets: [{
+        label: 'Investigations',
+        data: investigationTrends.map(item => item.value),
+        borderColor: '#4dd0ff',
+        backgroundColor: 'rgba(77, 208, 255, 0.12)',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#4dd0ff',
+        borderWidth: 2,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#9fb1c7' } },
+        y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.12)' }, ticks: { color: '#9fb1c7', precision: 0 } }
+      }
+    }
+  });
+</script>
+{% endblock %}

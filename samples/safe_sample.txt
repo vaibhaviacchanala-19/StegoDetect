@@ -1,0 +1,3 @@
+This is a safe example file for dashboard validation.
+URL https://example.com
+PowerShell -NoProfile -Command "Write-Host sample"

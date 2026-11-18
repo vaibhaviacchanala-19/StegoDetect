@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <p class="eyebrow">Case exports</p>
+    <h1 class="page-title">Reports</h1>
+  </div>
+  <a href="{{ url_for('upload') }}" class="btn btn-primary">New Investigation</a>
+</div>
+
+<div class="card board-panel mb-4">
+  <div class="card-header">
+    <h5>Report Center</h5>
+  </div>
+  <div class="card-body">
+    <p class="mb-3">Export investigation records in JSON, HTML, or PDF formats for case files and escalation workflows.</p>
+    <div class="row g-3">
+      {% if recent %}
+        {% for item in recent %}
+        <div class="col-lg-6">
+          <div class="border rounded p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong>{{ item.filename }}</strong>
+              <span class="badge {% if item.risk_level in ['high', 'critical'] %}bg-danger{% elif item.risk_level == 'medium' %}bg-info{% elif item.risk_level == 'low' %}bg-success{% else %}bg-secondary{% endif %}">{{ item.risk_level or item.risk_status or 'informational' }}</span>
+            </div>
+            <div class="small text-muted mb-3">{{ item.analysis_timestamp }}</div>
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="{{ url_for('analysis', investigation_id=item.id) }}" class="btn btn-sm btn-outline-light">Open</a>
+              <a href="{{ url_for('download_report', investigation_id=item.id, report_type='json') }}" class="btn btn-sm btn-outline-light">JSON</a>
+              <a href="{{ url_for('download_report', investigation_id=item.id, report_type='pdf') }}" class="btn btn-sm btn-outline-light">PDF</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="text-muted">No investigations are available for export yet.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

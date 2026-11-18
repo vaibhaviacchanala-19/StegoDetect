@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <p class="eyebrow">Environment</p>
+    <h1 class="page-title">Settings</h1>
+  </div>
+  <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light">Back to Dashboard</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card board-panel h-100">
+      <div class="card-header">
+        <h5>Forensic tool configuration</h5>
+      </div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Steghide: recommended for embedded-data inspection</li>
+          <li>Zsteg: useful for PNG and BMP review</li>
+          <li>Binwalk: container and binary artifact review</li>
+          <li>PNGcheck: PNG validation and structural checks</li>
+          <li>ExifTool: metadata extraction support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card board-panel h-100">
+      <div class="card-header">
+        <h5>Security defaults</h5>
+      </div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>25 MB upload size limit</li>
+          <li>Sanitized filenames and path-safe report names</li>
+          <li>SHA-256 duplicate detection</li>
+          <li>Graceful handling of missing external tools</li>
+          <li>Evidence-based analysis with no fabricated results</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

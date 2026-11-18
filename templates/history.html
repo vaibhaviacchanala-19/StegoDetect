@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <p class="eyebrow">Evidence timeline</p>
+    <h1 class="page-title">Investigation History</h1>
+  </div>
+  <a href="{{ url_for('upload') }}" class="btn btn-primary">New Investigation</a>
+</div>
+
+<div class="card board-panel mb-4">
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label text-light">Search</label>
+        <input class="form-control" type="text" name="search" value="{{ search or '' }}" placeholder="Filename, SHA-256, status...">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-light">Severity</label>
+        <select class="form-select" name="severity">
+          <option value="">Any</option>
+          <option value="informational" {% if severity_filter == 'informational' %}selected{% endif %}>Informational</option>
+          <option value="low" {% if severity_filter == 'low' %}selected{% endif %}>Low</option>
+          <option value="medium" {% if severity_filter == 'medium' %}selected{% endif %}>Medium</option>
+          <option value="high" {% if severity_filter == 'high' %}selected{% endif %}>High</option>
+          <option value="critical" {% if severity_filter == 'critical' %}selected{% endif %}>Critical</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-light">Status</label>
+        <select class="form-select" name="status">
+          <option value="">Any</option>
+          <option value="New" {% if status_filter == 'New' %}selected{% endif %}>New</option>
+          <option value="Escalated" {% if status_filter == 'Escalated' %}selected{% endif %}>Escalated</option>
+          <option value="Closed" {% if status_filter == 'Closed' %}selected{% endif %}>Closed</option>
+          <option value="Review" {% if status_filter == 'Review' %}selected{% endif %}>Review</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-outline-light w-100" type="submit">Apply</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card board-panel">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Filename</th>
+            <th>Risk</th>
+            <th>Status</th>
+            <th>Summary</th>
+            <th>Timestamp</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if investigations %}
+            {% for item in investigations %}
+            <tr>
+              <td>{{ item.id }}</td>
+              <td>{{ item.filename }}</td>
+              <td>
+                <span class="badge {% if item.risk_level in ['high', 'critical'] %}bg-danger{% elif item.risk_level == 'medium' %}bg-info{% elif item.risk_level == 'low' %}bg-success{% else %}bg-secondary{% endif %}">{{ item.risk_level or item.risk_status or 'informational' }}</span>
+              </td>
+              <td>{{ item.status or 'New' }}</td>
+              <td>{{ item.detection_summary or item.metadata_summary or 'No summary recorded.' }}</td>
+              <td>{{ item.analysis_timestamp }}</td>
+              <td>
+                <a href="{{ url_for('analysis', investigation_id=item.id) }}" class="btn btn-sm btn-outline-light">Open</a>
+                <a href="{{ url_for('download_report', investigation_id=item.id, report_type='json') }}" class="btn btn-sm btn-outline-secondary">JSON</a>
+                <a href="{{ url_for('download_report', investigation_id=item.id, report_type='pdf') }}" class="btn btn-sm btn-outline-secondary">PDF</a>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-4 text-muted">No investigations match the current filters.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

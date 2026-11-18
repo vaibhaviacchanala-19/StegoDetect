@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <p class="eyebrow">Overview</p>
+    <h1 class="page-title">About StegoDetect</h1>
+  </div>
+  <a href="{{ url_for('upload') }}" class="btn btn-primary">Analyze a File</a>
+</div>
+
+<div class="card board-panel mb-4">
+  <div class="card-header">
+    <h5>Forensic platform purpose</h5>
+  </div>
+  <div class="card-body">
+    <p>StegoDetect is a digital-forensics workflow for reviewing suspicious files, hidden data indicators, metadata anomalies, and embedded payload patterns while keeping the file out of execution.</p>
+    <p class="mb-0">The platform supports triage, risk scoring, analyst notes, and evidence export so investigation teams can maintain a clear chain of review and communicate findings to stakeholders.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card board-panel h-100">
+      <div class="card-header">
+        <h5>What the tool checks</h5>
+      </div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>File signatures and MIME mismatches</li>
+          <li>Metadata anomalies and suspicious fields</li>
+          <li>String extraction and encoded candidates</li>
+          <li>Entropy and structural indicators</li>
+          <li>Risk-tier scoring and case documentation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card board-panel h-100">
+      <div class="card-header">
+        <h5>Operational safety</h5>
+      </div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>No uploaded file is executed</li>
+          <li>External tools are only invoked with argument arrays and timeouts</li>
+          <li>Missing tools are clearly reported as unavailable</li>
+          <li>Detections remain evidence-based and analyst-reviewed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

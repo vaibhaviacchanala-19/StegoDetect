@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <p class="eyebrow">Case result</p>
+    <h1 class="page-title">Investigation Summary</h1>
+  </div>
+  <a href="{{ url_for('upload') }}" class="btn btn-outline-light">Analyze Another File</a>
+</div>
+
+{% if result and result.status %}
+  <div class="alert {% if result.status == 'error' %}alert-danger{% elif result.status == 'duplicate' %}alert-warning{% elif result.status == 'warning' %}alert-info{% else %}alert-success{% endif %} mb-4">
+    <strong>{{ result.status|upper }}</strong> — {{ result.message if result.message else 'Analysis completed.' }}
+  </div>
+{% endif %}
+
+{% if result and result.risk_assessment %}
+<div class="card board-panel mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>SOC Risk Assessment</h5>
+    <span class="badge {% if result.risk_assessment.risk_level == 'critical' or result.risk_assessment.risk_level == 'high' %}bg-danger{% elif result.risk_assessment.risk_level == 'medium' %}bg-info{% elif result.risk_assessment.risk_level == 'low' %}bg-success{% else %}bg-secondary{% endif %}">{{ result.risk_assessment.risk_level }}</span>
+  </div>
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="border rounded p-3 h-100">
+          <div class="text-muted small text-uppercase">Risk score</div>
+          <div class="display-6 fw-bold">{{ result.risk_assessment.risk_score }}</div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <p class="mb-2"><strong>Executive summary:</strong> {{ result.risk_assessment.executive_summary }}</p>
+        <p class="mb-0"><strong>Evidence summary:</strong> {{ result.risk_assessment.evidence_summary }}</p>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <h6>Technical findings</h6>
+      <ul class="mb-3">
+        {% for item in result.risk_assessment.findings %}
+        <li><strong>{{ item.title }}</strong> — {{ item.description }} ({{ item.risk_contribution }} pts, {{ item.severity }})</li>
+        {% endfor %}
+      </ul>
+      <h6>Recommended SOC actions</h6>
+      <ul>
+        {% for item in result.risk_assessment.recommended_soc_actions %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if result and result.stego_analysis %}
+<div class="card board-panel mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>Steganography Analysis</h5>
+    <span class="badge {% if result.stego_analysis.overall_status == 'warning' %}bg-warning text-dark{% elif result.stego_analysis.overall_status == 'ok' %}bg-success{% else %}bg-secondary{% endif %}">{{ result.stego_analysis.overall_status }}</span>
+  </div>
+  <div class="card-body">
+    {% if result.stego_analysis.overall_status != 'ok' %}
+      <div class="alert alert-warning mb-3">
+        Forensic utilities are not installed in this environment, so steganography analysis is unavailable until the required tools are added to PATH.
+      </div>
+    {% endif %}
+    <p class="text-muted mb-3">{{ result.stego_analysis.analysis_summary }}</p>
+    <div class="row g-3">
+      {% for tool_name, tool_result in result.stego_analysis.tools.items() %}
+      <div class="col-md-6 col-xl-3">
+        <div class="card h-100 border-secondary">
+          <div class="card-header py-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <strong>{{ tool_result.tool_name }}</strong>
+              <span class="badge {% if tool_result.status == 'available' %}bg-success{% elif tool_result.status == 'error' %}bg-danger{% elif tool_result.status == 'ok' %}bg-info{% else %}bg-secondary{% endif %}">{{ tool_result.status }}</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <p class="small text-muted mb-2">Version: {{ tool_result.version if tool_result.version else 'unavailable' }}</p>
+            <p class="small text-muted mb-2">Formats: {{ ', '.join(tool_result.supported_formats) if tool_result.supported_formats else 'n/a' }}</p>
+            {% if tool_result.findings %}
+              {% for item in tool_result.findings[:2] %}
+              <div class="mb-2 small">
+                <div class="fw-semibold">{{ item.finding_name }}</div>
+                <div class="text-muted">{{ item.description }}</div>
+                {% if item.evidence %}
+                <div class="text-info mt-1">{{ item.evidence[:120] }}</div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="small text-muted">No findings detected.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if result and result.advanced_analysis %}
+<div class="card board-panel mb-4">
+  <div class="card-header">
+    <h5>Advanced Digital Forensics</h5>
+  </div>
+  <div class="card-body">
+    <ul class="nav nav-tabs mb-3" id="advancedTabs" role="tablist">
+      <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#stringsTab" type="button">Strings Analysis</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#base64Tab" type="button">Base64 Analysis</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#entropyTab" type="button">Entropy Analysis</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#hexTab" type="button">Hex Viewer</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#signatureTab" type="button">Signature Analysis</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#imageTab" type="button">Image Analysis</button></li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane active" id="stringsTab">
+        {% if result.advanced_analysis.strings.findings %}
+          <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover">
+              <thead><tr><th>String</th><th>Offset</th><th>Category</th><th>Risk</th></tr></thead>
+              <tbody>
+                {% for item in result.advanced_analysis.strings.findings %}
+                <tr><td>{{ item.extracted_string }}</td><td>{{ item.offset if item.offset is not none else 'n/a' }}</td><td>{{ item.category }}</td><td>{{ item.risk }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">No suspicious strings detected.</p>
+        {% endif %}
+      </div>
+
+      <div class="tab-pane fade" id="base64Tab">
+        {% if result.advanced_analysis.base64.results %}
+          {% for item in result.advanced_analysis.base64.results %}
+          <div class="border rounded p-3 mb-3">
+            <p><strong>Original:</strong> {{ item.original_string }}</p>
+            <p><strong>Decoded:</strong> {{ item.decoded_output if item.decoded_output else 'not decodable' }}</p>
+            <p><strong>Status:</strong> {{ item.decoding_status }}</p>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted mb-0">No clear Base64 candidates detected.</p>
+        {% endif %}
+      </div>
+
+      <div class="tab-pane fade" id="entropyTab">
+        <p><strong>Overall entropy:</strong> {{ result.advanced_analysis.entropy.overall_entropy }}</p>
+        {% if result.advanced_analysis.entropy.chart_svg %}
+          <div class="mb-3">{{ result.advanced_analysis.entropy.chart_svg|safe }}</div>
+        {% endif %}
+        {% if result.advanced_analysis.entropy.high_entropy_regions %}
+          <ul>
+            {% for region in result.advanced_analysis.entropy.high_entropy_regions[:10] %}
+            <li>Offset {{ region.offset }} — entropy {{ region.entropy }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted mb-0">No high-entropy regions detected.</p>
+        {% endif %}
+      </div>
+
+      <div class="tab-pane fade" id="hexTab">
+        <div class="small text-muted mb-2">Header: {{ result.advanced_analysis.hex.header.hex }}</div>
+        <div class="table-responsive">
+          <table class="table table-dark table-striped table-hover small">
+            <thead><tr><th>Offset</th><th>Hex</th><th>ASCII</th></tr></thead>
+            <tbody>
+              {% for row in result.advanced_analysis.hex.rows[:32] %}
+              <tr><td>{{ row.offset }}</td><td>{{ row.hex }}</td><td>{{ row.ascii }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="signatureTab">
+        <p><strong>Actual type:</strong> {{ result.advanced_analysis.signature.actual_type if result.advanced_analysis.signature.actual_type else 'unknown' }}</p>
+        <p><strong>Expected extension:</strong> {{ result.advanced_analysis.signature.expected_extension if result.advanced_analysis.signature.expected_extension else 'unknown' }}</p>
+        {% for item in result.advanced_analysis.signature.findings %}
+          <div class="alert alert-secondary small">{{ item.description }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="tab-pane fade" id="imageTab">
+        {% if result.advanced_analysis.image.available %}
+          <p><strong>Dimensions:</strong> {{ result.advanced_analysis.image.dimensions.width }} x {{ result.advanced_analysis.image.dimensions.height }}</p>
+          <p><strong>Channel stats:</strong> {{ result.advanced_analysis.image.channel_stats }}</p>
+          <p><strong>LSB summary:</strong> {{ result.advanced_analysis.image.lsb_summary }}</p>
+        {% else %}
+          <p class="text-muted mb-0">Image analysis is not applicable for this file type.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card board-panel mb-4">
+  <div class="card-header">
+    <h5>Investigation Workflow</h5>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('analysis', investigation_id=(result.investigation_id if result.investigation_id is defined else (result.id if result.id is defined else 0))) }}">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Status</label>
+          <select class="form-select" name="status">
+            {% set statuses = ['New', 'Analyzing', 'Investigation Required', 'Escalated', 'Closed'] %}
+            {% for status in statuses %}
+            <option value="{{ status }}" {% if (result.status or 'New') == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Analyst notes</label>
+          <textarea class="form-control" name="notes" rows="3" placeholder="Add SOC notes, evidence notes, or triage decisions.">{{ result.investigation_notes or '' }}</textarea>
+        </div>
+      </div>
+      <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Update Workflow</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card board-panel h-100">
+      <div class="card-header">
+        <h5>File Information</h5>
+      </div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-5">Filename</dt>
+          <dd class="col-sm-7">{{ result.filename if result.filename else 'N/A' }}</dd>
+
+          <dt class="col-sm-5">Actual Type</dt>
+          <dd class="col-sm-7">{{ result.actual_type if result.actual_type else 'Unknown' }}</dd>
+
+          <dt class="col-sm-5">MIME Type</dt>
+          <dd class="col-sm-7">{{ result.mime_type if result.mime_type else 'Unknown' }}</dd>
+
+          <dt class="col-sm-5">File Size</dt>
+          <dd class="col-sm-7">{{ result.file_size if result.file_size else 0 }} bytes</dd>
+
+          <dt class="col-sm-5">SHA-256</dt>
+          <dd class="col-sm-7 text-break">{{ result.sha256 if result.sha256 else 'N/A' }}</dd>
+
+          <dt class="col-sm-5">Extension</dt>
+          <dd class="col-sm-7">{{ result.file_extension if result.file_extension else 'Unknown' }}</dd>
+
+          <dt class="col-sm-5">Risk Status</dt>
+          <dd class="col-sm-7">
+            <span class="badge {% if result.risk_status == 'high' %}bg-danger{% elif result.risk_status == 'suspicious' %}bg-warning text-dark{% elif result.risk_status == 'medium' %}bg-info{% else %}bg-success{% endif %}">
+              {{ result.risk_status if result.risk_status else 'low' }}
+            </span>
+          </dd>
+
+          <dt class="col-sm-5">Created</dt>
+          <dd class="col-sm-7">{{ result.creation_timestamp if result.creation_timestamp else 'N/A' }}</dd>
+
+          <dt class="col-sm-5">Modified</dt>
+          <dd class="col-sm-7">{{ result.modification_timestamp if result.modification_timestamp else 'N/A' }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card board-panel h-100">
+      <div class="card-header">
+        <h5>Metadata Results</h5>
+      </div>
+      <div class="card-body">
+        {% if result.metadata %}
+          {% if result.metadata.warning %}
+            <div class="alert alert-warning">{{ result.metadata.warning }}</div>
+          {% endif %}
+          <p class="mb-3 fw-semibold">{{ result.metadata.summary if result.metadata.summary else 'No metadata summary available.' }}</p>
+          {% if result.metadata.anomalies %}
+            <div class="alert alert-secondary">
+              <strong>Notable findings:</strong>
+              <ul class="mb-0 mt-2">
+                {% for item in result.metadata.anomalies %}
+                  <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if result.metadata.entries %}
+            <div class="table-responsive">
+              <table class="table table-dark table-striped table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for key, value in result.metadata.entries.items() %}
+                    {% if loop.index <= 15 %}
+                    <tr>
+                      <td>{{ key }}</td>
+                      <td>{{ value }}</td>
+                    </tr>
+                    {% endif %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No metadata entries were extracted from this file.</p>
+          {% endif %}
+        {% else %}
+          <p class="text-muted mb-0">Metadata analysis was not available.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
