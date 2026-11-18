@@ -2,6 +2,10 @@
 
 StegoDetect is a Flask-based forensic triage and steganography analysis application designed for cybersecurity investigations, evidence review, and SOC workflows. It combines upload validation, metadata analysis, file-signature review, steganography tooling checks, risk scoring, and investigation reporting into a single analyst-focused dashboard.
 
+## Dashboard Preview
+
+![StegoDetect Dashboard](docs/dashboard.png)
+
 ## Problem Statement
 
 Organizations need to examine suspicious files for hidden payloads, metadata anomalies, and embedded content without executing unknown files. Traditional antivirus workflows often miss hidden data, mismatched file signatures, and embedded archive patterns. StegoDetect helps analysts quickly triage suspicious files and document findings in a structured, reviewable workflow.
@@ -162,12 +166,6 @@ http://127.0.0.1:5000/
 5. Check tool availability and any tool-generated findings.
 6. Review the risk engine and analyst actions.
 7. Export HTML, JSON, or PDF reports when ready.
-
-## Dashboard Preview
-
-The dashboard provides a clear overview of steganography detections, risk severity, analysis trends, and recent investigations.
-
-![StegoDetect Dashboard](docs/dashboard.png)
 
 ## Screenshots
 
